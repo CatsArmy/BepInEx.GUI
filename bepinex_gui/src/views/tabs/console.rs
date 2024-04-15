@@ -354,22 +354,23 @@ impl ConsoleTab {
         if  logger_name.is_empty() {
             return true;
         }
-        let mut logger_name_sanitized = String::new();
-        for i in logger_name.chars() {
-            if i != ' ' {
-                logger_name_sanitized.push(i);
-            }
-        }
-        let mut mod_name_sanitized = String::new();
-        for i in mod_name.chars() {
-            if i != ' ' {
-                mod_name_sanitized.push(i);
-            }
-        }
+
+        let logger_name_sanitized = Self::remove_whitespaces(&logger_name);
+
+        let mod_name_sanitized = Self::remove_whitespaces(&mod_name);
         if  logger_name_sanitized.contains(&mod_name_sanitized) {
             return true;
         }
         false
+    }
+    pub fn remove_whitespaces(s: &str) -> String{
+        let mut result = String::new();
+        for i in s.chars() {
+            if  i != ' ' {
+                result.push(i);
+            }
+        }
+        result
     }
     pub fn get_real_name(s: &str) -> String {
         //[Info   :   BepInEx] Loading [CorporateRestructureWeather 1.0.0]

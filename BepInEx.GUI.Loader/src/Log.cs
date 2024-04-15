@@ -4,7 +4,7 @@ namespace BepInEx.GUI.Loader;
 
 internal static class Log
 {
-    private static ManualLogSource _logSource;
+    internal static ManualLogSource _logSource { get; set; }
 
     internal static void Init() => _logSource = Logger.CreateLogSource("BepInEx.GUI.Loader");
 

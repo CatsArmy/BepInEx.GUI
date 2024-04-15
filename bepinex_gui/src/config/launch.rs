@@ -5,7 +5,7 @@ use sysinfo::Pid;
 use crate::app;
 
 pub struct AppLaunchConfig {
-    target_name: String,
+    process_name: String,
     game_folder_full_path: PathBuf,
     bepinex_log_output_file_full_path: PathBuf,
     bepinex_gui_csharp_cfg_full_path: PathBuf,
@@ -21,11 +21,11 @@ impl AppLaunchConfig {
     pub fn from(args: &Vec<String>) -> Option<Self> {
         if args.len() == Self::ARG_COUNT {
             let bepinex_version = &args[1];
-            let target_name = &args[2];
-            let window_title = app::NAME.to_owned() + " " + bepinex_version + " - " + target_name;
+            let process_name = &args[2];
+            let window_title = app::NAME.to_owned() + " " + bepinex_version + " - " + process_name;
 
             Some(Self {
-                target_name: target_name.into(),
+                process_name: process_name.into(),
                 game_folder_full_path: (&args[3]).into(),
                 bepinex_log_output_file_full_path: (&args[4]).into(),
                 bepinex_gui_csharp_cfg_full_path: (&args[5]).into(),
@@ -42,22 +42,22 @@ impl AppLaunchConfig {
 
     pub fn default() -> Self {
         let bepinex_version_string = "Unknown";
-        let target_name = "Unknown";
+        let process_name = "Unknown";
         //no reason to defualt to RoR2 as nor steam in the C Drive as you cant be sure they even have it installed.
         //tho you can be pretty sure.
         Self {
-            target_name : target_name.into(),
+            process_name : process_name.into(),
             game_folder_full_path: "C:\\Program Files (x86)".into(),
             bepinex_log_output_file_full_path: "C:\\Program Files (x86)".into(),
             bepinex_gui_csharp_cfg_full_path: "C:\\Program Files (x86)".into(),
             target_process_id: Pid::from(17584),
             log_socket_port_receiver: 27090,
-            window_title : app::NAME.to_owned() + " " + bepinex_version_string + " - " + target_name,
+            window_title : app::NAME.to_owned() + " " + bepinex_version_string + " - " + process_name,
         }
     }
 
-    pub fn target_name(&self) -> &str {
-        self.target_name.as_ref()
+    pub fn process_name(&self) -> &str {
+        self.process_name.as_ref()
     }
 
     pub const fn game_folder_full_path(&self) -> &PathBuf {

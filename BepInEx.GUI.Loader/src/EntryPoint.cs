@@ -14,8 +14,8 @@ namespace BepInEx.GUI.Loader;
 
 internal static class EntryPoint
 {
-    public static IEnumerable<string> TargetDLLs { get; } = Array.Empty<string>();
-    private readonly static bool TryNoShell = false;
+    #region Preloader class structure
+    public static IEnumerable<string> TargetDLLs { get; } = [];
 
     public static void Patch(AssemblyDefinition _) { }
 
@@ -31,156 +31,179 @@ internal static class EntryPoint
             Log.Error($"Failed to initialize : ({e.GetType()}) {e.Message}{Environment.NewLine}{e}");
         }
     }
+    #endregion
+
+    public static int Port { get; private set; } = 0;
+
 
     private static void InitializeInternal()
     {
         Config.Init(Paths.ConfigPath);
 
-        var consoleConfig = (ConfigEntry<bool>)typeof(BepInPlugin).Assembly.
-            GetType("BepInEx.ConsoleManager", true).
-            GetField("ConfigConsoleEnabled",
-            BindingFlags.Static | BindingFlags.Public).GetValue(null);
+        var BepInExConsoleManager = typeof(BepInPlugin).Assembly.GetType("BepInEx.ConsoleManager", true);
+        ConfigEntry<bool> consoleConfig =
+                    (ConfigEntry<bool>)BepInExConsoleManager.GetField("ConfigConsoleEnabled",
+                    BindingFlags.Static | BindingFlags.Public).GetValue(null);
+
         if (!Config.EnableBepInExGUIConfig.Value)
         {
             Log.Info("Custom BepInEx.GUI is disabled in the config, aborting launch.");
+            return;
         }
-        else if (consoleConfig.Value)
+
+        if (consoleConfig.Value)
         {
             consoleConfig.Value = false;
             Log.Warning("Disabled old console restart game for changes to take effect");
+            return;
         }
-        else
-        {
-            FindAndLaunchGUI();
-        }
+
+        FindAndLaunchGUI();
     }
 
+    #region Find Executable Path
     private static string FindGUIExecutable()
     {
         const string GuiFileName = "bepinex_gui";
-        string modName = Config.ThunderstoreModNameConfig.Value;
-        string autherName = Config.AutherNameConfig.Value;
-        string GuiPath = $"{Paths.PatcherPluginPath}\\{autherName}-{modName}\\";
-        string str = $"{Paths.PatcherPluginPath}\\{autherName}-{modName}\\{GuiFileName}.exe";
-        var fileName = Path.GetFileName(GuiPath);
-        if (fileName == $"{GuiFileName}.exe")
+        Assembly Assembly = typeof(EntryPoint);
+        string ParentLocation = Directory.GetParent(Assembly.Location);
+        if (ParentLocation.EndsWith("patchers") && ParentLocation[ParentLocation.Length - 1] != '\\')
         {
-            var versInfo = FileVersionInfo.GetVersionInfo(str);
-            if (versInfo.FileMajorPart == 3)
-            {
-                Log.Info($"Found bepinex_gui v3 executable in {str}");
-                return str;
-            }
+            ParentLocation = "\\";
         }
-        //if not find returns null
-        return SearchForGuiExecuteable();
-    }
-    public static string SearchForGuiExecuteable()
-    {
-        const string GuiFileName = "bepinex_gui";
-        foreach (var filePath in Directory.GetFiles(Paths.PatcherPluginPath, "*", SearchOption.AllDirectories))
-        {
-            // No platform check because proton is used for RoR2 and it handles it perfectly anyway:
-            // It makes the Process.Start still goes through proton and makes the bep gui
-            // that was compiled for Windows works fine even in linux operating systems.
-            var fileName = Path.GetFileName(filePath);
 
-            if (fileName == $"{GuiFileName}.exe")
+        string PatchersDir = $"{Directory.GetParent(ParentLocation)}\\plugins";
+        string PatcherLocation = $"{ParentLocation}{GuiFileName}.exe";
+        if (File.Exists(PatcherLocation))
+        {
+            return PatcherLocation;
+        }
+
+        string PluginsDir = $"{Directory.GetParent(ParentLocation)}\\plugins";
+        string PluginsLocation = $"{PatchersDir}{GuiFileName}.exe";
+        if (File.Exists(PluginsLocation))
+        {
+            return PluginsLocation;
+        }
+        //If quick find did not find the executable
+        //then perform a manual search over all files in BepInEx/plugins and/or BepInEx/patcher
+
+        //Search patchers Dir
+        string executable = null;
+        executable = SearchGUIExecutable(PatchersDir);
+        if (executable != null)
+        {
+            return executable;
+        }
+
+        //Search plugins Dir
+        executable = SearchGUIExecutable(PluginsDir);
+
+        if (executable != null)
+        {
+            return executable;
+        }
+
+        return executable;
+    }
+
+    private static string SearchGUIExecutable(string ParentDir)
+    {
+        string[] Directorys = Directory.GetDirectories(ParentDir);
+        foreach (string Directory in Directorys)
+        {
+            string[] Files = Directory.GetFiles(ParentDir);
+            string[] Folders = Directory.Split('\\');
+            string Folder = Folders[Folders.Length - 1];
+            if (!Folder.EndsWith('\\'))
             {
-                var versInfo = FileVersionInfo.GetVersionInfo(filePath);
-                //versInfo.GetType().GetField()
-                if (versInfo.FileMajorPart == 3)
+                Folder += "\\";
+            }
+            foreach (string file in Files)
+            {
+                string FileName = file.Split(Folder);
+                if (FileName == $"{GuiFileName}.exe")
                 {
-                    Log.Info($"Found bepinex_gui v3 executable in {filePath}");
-                    return filePath;
+                    return file;
                 }
             }
         }
         return null;
     }
-
-    private static void FindAndLaunchGUI()
-    {
-        Log.Info("Finding and launching GUI");
-
-        var executablePath = FindGUIExecutable();
-        if (executablePath != null)
-        {
-            var freePort = FindFreePort();
-            var process = LaunchGUI(executablePath, freePort);
-            if (process != null)
-            {
-                Logger.Listeners.Add(new SendLogToClientSocket(freePort));
-                Logger.Listeners.Add(new CloseProcessOnChainloaderDone(process));
-            }
-            else
-            {
-                Log.Info("LaunchGUI failed");
-            }
-        }
-        else
-        {
-            Log.Info("bepinex_gui executable not found.");
-        }
-    }
-
+    #endregion
     private static int FindFreePort()
     {
-        int port = 0;
         Socket socket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
-            IPEndPoint localEP = new(IPAddress.Any, 0);
+            IPEndPoint localEP = new(IPAddress.Any, Port);
             socket.Bind(localEP);
             localEP = (IPEndPoint)socket.LocalEndPoint;
-            port = localEP.Port;
+            Port = localEP.Port;
         }
         finally
         {
             socket.Close();
         }
 
-        return port;
+        return Port;
     }
 
-    private static Process LaunchGUI(string executablePath, int socketPort)
+    private static void FindAndLaunchGUI()
     {
-        string[] args =
-        [
-            $"{typeof(Paths).Assembly.GetName().Version}", //arg[1] Version
-            $"{Paths.ProcessName}",                        //arg[2] Target name
-            $"{Paths.GameRootPath}",                       //arg[3] Game folder -P -F
-            $"{Paths.BepInExRootPath}\\LogOutput.log",     //arg[4] BepInEx output -P -F
-            $"{Config.ConfigFilePath}",                    //arg[5] ConfigPath
-            $"{Process.GetCurrentProcess().Id}",           //arg[6] Process Id
-            $"{socketPort}",                               //arg[7] socket port reciver
-        ];
-        ProcessStartInfo processStartInfo;
-        if (TryNoShell)
-        {
-            processStartInfo = new ProcessStartInfo(fileName: executablePath, FormatArguments(args));
+        Log.Info("Finding and launching GUI");
 
-            processStartInfo.UseShellExecute = false;
-            processStartInfo.FileName = "BepInEx GUI";
-            processStartInfo.CreateNoWindow = true;
-            processStartInfo.WorkingDirectory = Path.GetFullPath(Paths.ExecutablePath);
-            processStartInfo.EnvironmentVariables.Add("PATH", Path.GetFullPath(executablePath));// .../GUI.exe
-        }
-        else
+        string exePath = FindGUIExecutable();
+        if (exePath == null)
         {
-            processStartInfo = new ProcessStartInfo(fileName: "BepInEx GUI", FormatArguments(args));
-            processStartInfo.WorkingDirectory = Path.GetDirectoryName(executablePath);
-            //processStartInfo.UseShellExecute = true;
-            //processStartInfo.CreateNoWindow = true;
+            Log.Info("bepinex_gui executable not found.");
         }
+
+        Port = FindFreePort();
+
+        Process process = LaunchGUI(exePath, Port);
+        if (process == null)
+        {
+            Log.Info("LaunchGUI failed");
+        }
+
+        Logger.Listeners.Add(new SendLogToClientSocket(Port));
+        Logger.Listeners.Add(new CloseProcessOnChainloaderDone(process));
+    }
+
+    private const readonly string[] args =
+        [
+            $"\"{typeof(Paths).Assembly.GetName().Version}\"", //arg[1] Version
+            $"\"{Paths.ProcessName}\"",                        //arg[2] Target name
+            $"\"{Paths.GameRootPath}\"",                       //arg[3] Game folder -P -F
+            $"\"{Paths.BepInExRootPath}\\LogOutput.log\"",     //arg[4] BepInEx output -P -F
+            $"\"{Config.ConfigFilePath}\"",                    //arg[5] ConfigPath
+            $"\"{Process.GetCurrentProcess().Id}\"",           //arg[6] Process Id
+            $"\"{socketPort}\"",                               //arg[7] socket port reciver
+        ];
+
+    private static Process LaunchGUI(string exePath, int socketPort)
+    {
+        if (exePath == null)
+        {
+            return null;
+        }
+
+
+        ProcessStartInfo processStartInfo = new ProcessStartInfo(fileName: exePath, FormatArguments(args))
+        {
+            WorkingDirectory = Path.GetDirectoryName(exePath)
+        };
         return Process.Start(processStartInfo);
     }
-    private static string FormatArguments(this string[] args, int i = 0)
+
+    private static string FormatArguments(this string[] kwargs)
     {
-        if (i == args.Length - 1)
+        string args = string.Empty;
+        foreach (string arg in kwargs)
         {
-            return $"\"{args[i]}\"";
+            args += arg;
         }
-        return $"\"{args[i]}\" {FormatArguments(args, ++i)}";
+        return args;
     }
 }

@@ -2,14 +2,15 @@
 using System.Net.Sockets;
 using System.Threading;
 using BepInEx.Logging;
+using HarmonyLib;
 
 namespace BepInEx.GUI.Loader;
 
+[HarmonyPatch]
 internal class SendLogToClientSocket : ILogListener
 {
-    private int _freePort;
 
-    private readonly Thread _thread;
+    private readonly Thread _thread = null;
 
     private readonly object _queueLock = new();
     private readonly Queue<LogEventArgs> _logQueue = new();
@@ -17,25 +18,33 @@ internal class SendLogToClientSocket : ILogListener
     private bool _isDisposed = false;
 
     internal static SendLogToClientSocket Instance { get; private set; }
+    private const string IP_ADDRESS = "127.0.0.1";
+    private const int SLEEP_MILLISECONDS = 17;
+
+
+    private int _freePort = 0;
+    private IPAddress ipAddress = null;
+    private TcpListener listener = null;
+
 
     internal SendLogToClientSocket(int freePort)
     {
         Instance = this;
-
+        
         _freePort = freePort;
 
         _thread = new Thread(() =>
         {
-            var ipAddress = IPAddress.Parse("127.0.0.1");
+            ipAddress = IPAddress.Parse(IP_ADDRESS);
 
-            var listener = new TcpListener(ipAddress, _freePort);
+            listener = new TcpListener(ipAddress, _freePort);
 
             listener.Start();
 
             while (true)
             {
                 Log.Info($"[SendLogToClient] Accepting Socket.");
-                var clientSocket = listener.AcceptSocket();
+                Socket clientSocket = listener.AcceptSocket();`
 
                 if (_isDisposed)
                 {
@@ -47,6 +56,13 @@ internal class SendLogToClientSocket : ILogListener
         });
 
         _thread.Start();
+    }
+    [HarmonyPatch]
+    [HarmonyPostfix]
+    [HarmonyAfter("mattymatty.AsyncLoggers")]
+    private static string LogToString(LogEventArgs args)
+    {
+        return args.ToString();
     }
 
     private void SendPacketsToClientUntilConnectionIsClosed(Socket clientSocket)
@@ -60,13 +76,13 @@ internal class SendLogToClientSocket : ILogListener
 
             while (_logQueue.Count > 0)
             {
-                LogEventArgs log;
+                LogEventArgs eventArgs;
                 lock (_queueLock)
                 {
-                    log = _logQueue.Peek();
+                    eventArgs = _logQueue.Peek();
                 }
-                var logPacket = new LogPacket(log);
-
+                string log = GetLogString();
+                LogPacket logPacket = new LogPacket(eventArgs, );
                 try
                 {
                     clientSocket.Send(logPacket.Bytes);
@@ -82,8 +98,7 @@ internal class SendLogToClientSocket : ILogListener
                     _ = _logQueue.Dequeue();
                 }
             }
-
-            Thread.Sleep(17);
+            Thread.Sleep(SLEEP_MILLISECONDS);
         }
     }
 
@@ -101,6 +116,7 @@ internal class SendLogToClientSocket : ILogListener
     }
 
     private bool _gotFirstLog = false;
+
     public void LogEvent(object sender, LogEventArgs eventArgs)
     {
         if (_isDisposed)
@@ -115,16 +131,16 @@ internal class SendLogToClientSocket : ILogListener
 
         if (!_gotFirstLog)
         {
-            if (eventArgs.Level == LogLevel.Message &&
-                eventArgs.Source.SourceName == "BepInEx" &&
-                eventArgs.Data.ToString().StartsWith("BepInEx"))
-            {
-                _gotFirstLog = true;
-            }
-        }
-        else
-        {
             StoreLog(eventArgs);
+            return;
         }
+
+        if (eventArgs.Level == LogLevel.Message &&
+            eventArgs.Source.SourceName == "BepInEx" &&
+            eventArgs.Data.ToString().StartsWith("BepInEx"))
+        {
+            _gotFirstLog = true;
+        }
+
     }
 }
