@@ -1,18 +1,17 @@
-use std::path::PathBuf;
-
-use eframe::{
-    self,
-    egui::{Button, Context, RichText, TopBottomPanel, Ui, Visuals},
-    emath::Vec2,
-    epaint::FontId,
-};
-use sysinfo::Pid;
-
 use crate::{
     app::BepInExGUI,
     backend::{file_explorer_utils, thunderstore},
     data::bepinex_log,
 };
+use eframe::{
+    egui::{Button, Context, RichText, TopBottomPanel, Ui, Visuals},
+    emath::Vec2,
+    epaint::FontId,
+};
+use std::path::PathBuf;
+use sysinfo::Pid;
+use eframe;
+
 
 pub mod components;
 pub mod disclaimer;
@@ -86,14 +85,11 @@ impl BepInExGUI {
         _ctx: &Context,
         game_folder_full_path: &PathBuf,
         bepinex_log_output_file_full_path: &PathBuf,
-        target_process_id: Pid,
-    ) {
+        target_process_id: Pid) {
         ui.add_space(3.0);
 
         ui.horizontal(|ui| {
             const FONT_SIZE: f32 = 18.;
-            // let mut FONT_SIZE = 20. * (ui.available_width() / 900.);
-
             let mut button_size = ui.available_size() / 5.;
             let spacing = ui.available_width() / 8.;
             button_size.y += 25.;
@@ -126,8 +122,7 @@ fn render_open_game_folder_button(
     ui: &mut Ui,
     button_size: Vec2,
     game_folder_full_path: &PathBuf,
-    font_size: f32,
-) {
+    font_size: f32) {
     if components::button("Open Game Folder", ui, button_size, font_size) {
         file_explorer_utils::open_path_in_explorer(game_folder_full_path);
     }
@@ -137,8 +132,7 @@ fn render_copy_log_file_button(
     ui: &mut Ui,
     button_size: Vec2,
     bepinex_log_output_file_full_path: &PathBuf,
-    font_size: f32,
-) {
+    font_size: f32) {
     if components::button("Copy Log File", ui, button_size, font_size) {
         bepinex_log::file::open_file_explorer_to_file_and_zip_it_if_needed(
             bepinex_log_output_file_full_path,
@@ -151,8 +145,7 @@ fn render_open_modding_discord_button(
     ui: &mut Ui,
     button_size: Vec2,
     target_process_id: Pid,
-    font_size: f32,
-) {
+    font_size: f32) {
     if components::button("Modding Discord", ui, button_size, font_size) {
         thunderstore::api::open_modding_discord(target_process_id);
     }

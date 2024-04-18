@@ -16,6 +16,9 @@ use crate::data::bepinex_mod::BepInExMod;
 use super::BepInExLogEntry;
 use super::LogLevel;
 
+const IPV4_ADDRESS: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
+const IP_ADDRESS: IpAddr = IpAddr::V4(IPV4_ADDRESS);
+
 #[derive(Clone)]
 pub struct LogReceiver {
     log_socket_port_receiver: u16,
@@ -37,10 +40,9 @@ impl LogReceiver {
     }
 
     pub fn start_thread_loop(&self) {
-        let server_address = SocketAddr::new(
-            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
-            self.log_socket_port_receiver,
-        );
+        let server_address = SocketAddr::new(IP_ADDRESS,
+            self.log_socket_port_receiver,);
+            
         let inst = self.clone();
         thread::spawn(move || -> io::Result<()> {
             loop {
@@ -52,8 +54,7 @@ impl LogReceiver {
                                     Ok(log_level) => {
                                         match packet_protocol::read_packet(
                                             &mut tcp_stream,
-                                            packet_length,
-                                        ) {
+                                            packet_length) {
                                             Ok(packet_bytes) => {
                                                 inst.make_log_entry_from_packet_data(
                                                     log_level,
@@ -65,7 +66,8 @@ impl LogReceiver {
                                                     "Error reading packet: {}\nDisconnecting socket",
                                                     err
                                                 );
-                                                break;//DO NOT BREAK WHAT THE FUCK IS WRONG WITH YOU??????
+                                                break;//DO NOT BREAK WHAT THE FUCK IS WRONG WITH YOU?????? 
+                                                //i am appoligize it was late at night...
                                                 //BEFORE REBUILDING merge changes to bepinex_gui branch from Laptop to github
                                             }
                                         }

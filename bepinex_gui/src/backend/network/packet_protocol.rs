@@ -7,6 +7,17 @@ use std::net::TcpStream;
 
 use crate::data::bepinex_log::LogLevel;
 
+
+#[no_mangle]
+#[allow(dead_code)]
+#[allow(non_snake_case)]
+#[allow(non_camel_case_types)]
+#[allow(non_upper_case_globals)]
+pub unsafe extern "C" fn csharp_to_rust_bytes(bytes: *const u8, len: i32) {
+    let slice = std::slice::from_raw_parts(bytes, len as usize);
+    let _vec = slice.to_vec();
+}
+
 pub fn read_packet_length(tcp_stream: &mut TcpStream) -> Result<usize, std::io::Error> {
     const HEADER_SIZE: usize = size_of::<u32>();
 

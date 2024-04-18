@@ -81,6 +81,7 @@ impl Tab for GeneralTab {
         "General"
     }
 
+    /// Tab controls
     fn update_top_panel(
         &mut self,
         data: &AppLaunchConfig,
@@ -88,12 +89,9 @@ impl Tab for GeneralTab {
         ui: &mut eframe::egui::Ui,
     ) {
         egui::menu::bar(ui, move |ui| {
-            // controls
             ui.with_layout(Layout::left_to_right(Align::default()), |ui| {
                 let target_is_loading_text = format!(
-                    "Modded {} is loading, you can close this window at any time.",
-                    data.target_name()
-                );
+                    "Modded {} is loading, you can close this window at any time.", data.process_name());
                 ui.label(RichText::new(target_is_loading_text).font(FontId::proportional(20.0)));
             });
         });

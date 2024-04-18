@@ -11,25 +11,33 @@ using BepInEx.Logging;
 using HarmonyLib;
 using Mono.Cecil;
 
-
 namespace BepInEx.GUI.Loader;
 
 internal static class EntryPoint
 {
-    public const string GUID = $"{nameof(BepInEx)}.{nameof(GUI)}.{nameof(Loader)}";
-
-    public static SendLogToClientSocket GUI_Sender;
     public static IEnumerable<string> TargetDLLs { get; } = [];
-
+    public static SendLogToClientSocket GUI_Sender;
+    public static Harmony _harmony;
+    public const string GUID = $"{nameof(BepInEx)}.{nameof(GUI)}.{nameof(Loader)}";
     private const SearchOption searchOption = SearchOption.AllDirectories;
     private const string GuiFileFullName = "bepinex_gui.exe";
     private const bool OnlySearchGUI_IP_Port = true;
     private const string searchPattern = "*";
+    private const bool Debug = false;
 
-    public static Harmony _harmony;
-    public static void Patch(AssemblyDefinition _) { }
 
-    // Called before patching occurs
+    /// <summary>
+    /// Patch whichever assemblys you need to
+    /// </summary>
+    ///  <param name="_">The assemblys</param>
+    public static void Patch(AssemblyDefinition _)
+    {
+        ///Do stuff if you need to
+    }
+
+    /// <summary>
+    /// Called before patching occurs
+    /// </summary>
     public static void Initialize()
     {
         Log.Init();
@@ -43,8 +51,95 @@ internal static class EntryPoint
         }
     }
 
-    // Called after preloader has patched all assemblies and loaded them in
-    // At this point it is fine to reference patched assemblies
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="dir">Game Directory</param>
+    /// <param name="name"></param>
+    /// <returns>the path to the icon file</returns>
+    /// ProcessName = Path.GetFileNameWithoutExtension(executablePath);
+    /// eg ..\..\..\Lethal Company.exe = Lethal Company
+    public static string SaveIcon()
+    {
+        string icon_dir = $"{Paths.GameRootPath}{(Paths.GameRootPath.EndsWith('\\') ? string.Empty : "\\")}icon.";
+
+        string icon_file = IconIsSaved(icon_dir);
+        if (icon_file != null)
+        {
+            Log.Info("Icon was already saved");
+            return icon_file;
+        }
+
+        return "None";
+        //System.Drawing.Icon icon = ExtractIconFromFilePath(Paths.ExecutablePath);
+
+        //if (icon == null)
+        //{
+        //    Log.Warning("Failed to exctract the Icon from the game executable");
+        //    return "None";
+        //}
+
+        //try
+        //{
+        //    using (FileStream stream = new FileStream(icon_dir, FileMode.CreateNew))
+        //    {
+        //        icon.ToBitmap().Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+        //        stream.Close();
+        //    }
+        //}
+
+        //catch (Exception e)
+        //{
+        //    Log.Debug($"Failed to save icon or somehow the saved icon was missed{Environment.NewLine}{e}");
+        //    return "None";
+        //}
+
+        //return icon_dir;
+    }
+
+    private static string IconIsSaved(string icon_file_path)
+    {
+        string[] SupportedFileExtensions = ["png", "ico", "jpeg", "jpg", "gif", "webp", "tiff"];
+        foreach (string ext in SupportedFileExtensions)
+        {
+            string icon = $"{icon_file_path}{ext}";
+            if (File.Exists(icon))
+            {
+                Log.Warning($"Icon already exists at path: {icon}");
+                return icon;
+            }
+        }
+
+        return null;
+    }
+
+    ///// <summary>
+    ///// the icon representation of an image that is contained in the specified file.
+    ///// </summary>
+    ///// <param name="path">the path to the icon</param>
+    ///// <returns>The icon of the path if it exists</returns>
+    //private static System.Drawing.Icon ExtractIconFromFilePath(string path)
+    //{
+    //    System.Drawing.Icon result = null;
+
+    //    try
+    //    {
+    //        result = System.Drawing.Icon.ExtractAssociatedIcon(path);
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        Log.Warning($"Unable to extract the icon from the binary{Environment.NewLine}{e}");
+    //    }
+
+    //    return result;
+    //}
+
+
+    /// <summary>
+    /// Called after preloader has patched all assemblies and loaded them in
+    /// Called after preloader has patched all assemblies and loaded them in
+    /// </summary> 
     public static void Finish()
     {
         _harmony = new Harmony(EntryPoint.GUID);
@@ -54,16 +149,18 @@ internal static class EntryPoint
     private static void InitializeInternal()
     {
         Config.Init(Paths.ConfigPath);
-        ConfigEntry<bool> consoleConfig = (ConfigEntry<bool>)typeof(BepInPlugin).Assembly.
-            GetType("BepInEx.ConsoleManager", true).
-            GetField("ConfigConsoleEnabled",
-            BindingFlags.Static | BindingFlags.Public).GetValue(null);
 
         if (!Config.EnableBepInExGUIConfig.Value)
         {
             Log.Info("Custom BepInEx.GUI is disabled in the config, aborting launch.");
             return;
         }
+
+        Type BepInExConsoleManager = typeof(BepInPlugin).Assembly.GetType("BepInEx.ConsoleManager", true);
+
+        ConfigEntry<bool> consoleConfig =
+            (ConfigEntry<bool>)BepInExConsoleManager.GetField("ConfigConsoleEnabled", BindingFlags.Static | BindingFlags.Public)
+            .GetValue(null);
 
         if (consoleConfig.Value && Config.AllowChangingConfigValues.Value)
         {
@@ -89,7 +186,19 @@ internal static class EntryPoint
             }
         }
         int freePort = FindFreePort();
-        Process process = LaunchGUI(executablePath, freePort);
+        ProcessStartInfo processStartInfo = LaunchGUI(executablePath, freePort);
+        if (Debug)
+        {
+            return;
+        }
+        Process process = Process.Start(processStartInfo);
+
+        ///Potentials overhead
+        /// * parsing rust/c# strings for communication
+        ///var i = process.StandardInput;
+        ///var j = process.StandardOutput;
+        ///###
+
         if (process == null)
         {
             Log.Info("LaunchGUI failed");
@@ -100,7 +209,10 @@ internal static class EntryPoint
         Logger.Listeners.Add(GUI_Sender);
     }
 
-    //New method works 100% was tested
+    /// <summary>
+    /// Faster more relayable method using good assumptions
+    /// </summary>
+    /// <returns>The path to the GUI executable if found otherwise null</returns>
     private static string SearchForGUIExecutable()
     {
         Assembly assembly = typeof(EntryPoint).Assembly;
@@ -133,10 +245,14 @@ internal static class EntryPoint
     }
 
     /// <summary>
+    /// search all folders and files in the "patchers" folder and the "plugins" folder
+    /// </summary>
+    /// <remarks>
     /// No platform check because proton is used for RoR2 and it handles it perfectly anyway:
     /// It makes the Process.Start still goes through proton and makes the bep gui
     /// that was compiled for Windows works fine even in linux operating systems.
-    /// </summary>
+    /// </remarks>
+    /// <returns>The path to the GUI executable if found otherwise null</returns>
     public static string FallbackSearchForGUIExecuteable()
     {
         Log.Info("Failed to quick find GUI.");
@@ -161,10 +277,7 @@ internal static class EntryPoint
         Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
-            IPEndPoint localEP = OnlySearchGUI_IP_Port
-                ? new IPEndPoint(IPAddress.Parse("127.0.0.1"), port)
-                : new IPEndPoint(IPAddress.Any, port);
-
+            IPEndPoint localEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
             socket.Bind(localEP);
             localEP = (IPEndPoint)socket.LocalEndPoint;
             port = localEP.Port;
@@ -177,18 +290,24 @@ internal static class EntryPoint
         return port;
     }
 
-    private static Process LaunchGUI(string executablePath, int port)
+    private static ProcessStartInfo LaunchGUI(string executablePath, int port)
     {
+        string arg8 = SaveIcon();
         string[] argList =
         [
             $"\"{typeof(Paths).Assembly.GetName().Version}\" ", //arg[1] Version
-            $"\"{Paths.ProcessName}\" ",                              //arg[2] Target name
-            $"\"{Paths.GameRootPath}\" ",                             //arg[3] Game folder -P -F
-            $"\"{Paths.BepInExRootPath}\\LogOutput.log\" ",           //arg[4] BepInEx output -P -F
-            $"\"{Config.ConfigFilePath}\" ",                          //arg[5] ConfigPath
-            $"\"{Process.GetCurrentProcess().Id}\" ",                 //arg[6] Process Id
-            $"\"{port}\""                                             //arg[7] socket port reciver
+            $"\"{Paths.ProcessName}\" ",                        //arg[2] Target name
+            $"\"{Paths.GameRootPath}\" ",                       //arg[3] Game folder -P -F
+            $"\"{Paths.BepInExRootPath}\\LogOutput.log\" ",     //arg[4] BepInEx output -P -F
+            $"\"{Config.ConfigFilePath}\" ",                    //arg[5] ConfigPath
+            $"\"{Process.GetCurrentProcess().Id}\" ",           //arg[6] Process Id
+            $"\"{port}\" ",                                     //arg[7] socket port reciver
+            $"\"{arg8}\""
         ];
+
+        if (Debug)
+            foreach (string arg in argList)
+                Log.Fatal(arg);
 
         string args = string.Empty;
         foreach (string arg in argList)
@@ -201,6 +320,6 @@ internal static class EntryPoint
             Arguments = args
         };
 
-        return Process.Start(processStartInfo);
+        return processStartInfo;
     }
 }

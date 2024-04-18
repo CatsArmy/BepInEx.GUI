@@ -699,16 +699,17 @@ impl ConsoleTab {
             self.mods.push(mod_);
         }
     }
-
+ 
+    /// loop until the channel is emptied
+    /// if we don't do that the maximum amount of log received is
+    /// tied to the framerate of the GUI
     fn update_log_receiver(&mut self) {
-        // loop until the channel is emptied
-        // if we don't do that the maximum amount of log received is
-        // tied to the framerate of the GUI
         loop {
             match self.log_receiver.try_recv() {
                 Ok(log) => {
                     self.logs.push(log);
                 }
+                
                 Err(err) => match err {
                     crossbeam_channel::TryRecvError::Disconnected
                     | crossbeam_channel::TryRecvError::Empty => {

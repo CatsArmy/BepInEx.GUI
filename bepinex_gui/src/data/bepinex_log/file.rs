@@ -1,16 +1,14 @@
+use crate::{backend::file_explorer_utils, paths};
+use zip::write::FileOptions;
 use std::{
     fs::{self, File},
     io::{BufReader, BufWriter},
     path::{Path, PathBuf},
 };
-use zip::write::FileOptions;
-
-use crate::{backend::file_explorer_utils, paths};
 
 pub fn open_file_explorer_to_file_and_zip_it_if_needed(
     file_full_path: &PathBuf,
-    zip_file_name: &str,
-) {
+    zip_file_name: &str) {
     if let Ok(file_metadata) = fs::metadata(file_full_path) {
         let file_size_bytes = file_metadata.len();
         const ONE_MEGABYTE: u64 = 1_000_000;
@@ -47,10 +45,6 @@ pub fn zip<P: AsRef<Path>, P2: AsRef<Path>>(
     let mut log_file_buffer = BufReader::new(File::open(input_log_file_path)?);
     let mut zip_buf_writer = BufWriter::new(zip);
     std::io::copy(&mut log_file_buffer, &mut zip_buf_writer)?;
-
-    // zip.write_all()?;
-
-    // zip.finish()?;
     Ok(())
 }
 
@@ -60,6 +54,5 @@ pub fn full_path() -> Option<PathBuf> {
             return Some(directory_full_path.join("log.txt"));
         }
     }
-
     None
 }

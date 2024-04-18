@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-
 use crate::app;
 
 pub fn get_app_config_directory() -> Option<PathBuf> {

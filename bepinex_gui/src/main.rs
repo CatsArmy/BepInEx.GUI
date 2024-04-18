@@ -1,6 +1,5 @@
 // Comment for enabling console
 #![windows_subsystem = "windows"]
-
 use config::launch::AppLaunchConfig;
 use eframe::egui::*;
 use std::env;
@@ -16,21 +15,18 @@ mod views;
 
 fn main() {
     logger::init();
-
     backend::init();
 
     let args: Vec<String> = env::args().collect();
-
     let app_config = AppLaunchConfig::from(&args).unwrap_or_else(AppLaunchConfig::default);
+    let app_icon_path = String::from(app_config.app_icon_path());
     let gui = app::BepInExGUI::new(app_config);
 
     let native_options = eframe::NativeOptions {
         min_window_size: Some(Vec2::new(480., 270.)),
         initial_window_size: Some(Vec2::new(1034., 520.)),
         initial_centered: true,
-
-        icon_data: Some(load_icon()),
-
+        icon_data: Some(load_icon(&app_icon_path)),
         ..Default::default()
     };
 
@@ -44,20 +40,28 @@ fn main() {
     }
 }
 
-fn load_icon() -> eframe::IconData {
-    let (icon_rgba, icon_width, icon_height) = {
-        let icon = include_bytes!("../assets/icons/discord_server_icon.png");
-        let image = image::load_from_memory(icon)
-            .expect("Failed to open icon path")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
-    };
+fn load_icon(app_icon: &String) -> eframe::IconData {
+    if app_icon != "None" {
+        let icon = image::open(app_icon);
+        if let Ok(icon) = icon {
+            let image = icon.into_rgba8();
+            let (width, height, rgba) = { (image.width(), image.height(), image.into_raw()) };
 
+            return eframe::IconData {
+                width: width,
+                height: height,
+                rgba: rgba,
+            };
+        }
+    }
+
+    let icon = include_bytes!("../assets/icons/discord_server_icon.png");
+    let image = image::load_from_memory(icon).expect("Failed to open icon from the given path");
+    let image = image.to_rgba8();
+    let (width, height, rgba) = { (image.width(), image.height(), image.into_raw()) };
     eframe::IconData {
-        rgba: icon_rgba,
-        width: icon_width,
-        height: icon_height,
+        width: width,
+        height: height,
+        rgba: rgba,
     }
 }

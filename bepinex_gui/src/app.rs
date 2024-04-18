@@ -104,18 +104,16 @@ impl BepInExGUI {
             .clone();
 
         _ = self.config.read_bepinex_toml_cfg_file();
-
+        
         self
     }
 
     fn init_log_receiver(
         &mut self,
-        log_socket_port_receiver: u16,
-    ) -> (
+        log_socket_port_receiver: u16) -> 
+        (Receiver<BepInExMod>,
         Receiver<BepInExMod>,
-        Receiver<BepInExMod>,
-        Receiver<BepInExLogEntry>,
-    ) {
+        Receiver<BepInExLogEntry>) {
         let (general_tab_mod_s, general_tab_mod_r) = crossbeam_channel::unbounded();
         let (console_tab_mod_s, console_tab_mod_r) = crossbeam_channel::unbounded();
         let (log_s, log_r) = crossbeam_channel::unbounded();
@@ -138,19 +136,17 @@ impl BepInExGUI {
         log_r: Receiver<BepInExLogEntry>,
     ) {
         self.tabs.push(Box::new(GeneralTab::new(general_tab_mod_r)));
-        self.tabs.push(Box::new(ConsoleTab::new(
-            console_tab_mod_r,
-            log_r,
-            self.should_exit_app.clone(),
-        )));
+        self.tabs.push(Box::new(ConsoleTab::new(console_tab_mod_r, log_r,
+            self.should_exit_app.clone())));
+
         self.tabs.push(Box::new(SettingsTab::new()));
     }
 
     fn start_thread_exit_gui_if_target_process_not_alive(&self, target_process_id: Pid) {
-        process::spawn_thread_is_process_dead(
-            target_process_id,
+        process::spawn_thread_is_process_dead(target_process_id,
             self.config.close_window_when_game_closes.clone(),
             self.should_exit_app.clone(),
         )
     }
 }
+

@@ -10,6 +10,7 @@ impl BepInExMod {
             version: version.into(),
         }
     }
+    
     pub fn name(&self) -> &str {
         self.name.as_ref()
     }

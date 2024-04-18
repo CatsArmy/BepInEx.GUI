@@ -111,8 +111,6 @@ pub fn get_dark_theme() -> egui::Style {
                                                                            // egui_style.visuals.widgets.inactive.bg_fill = Color32::from_gray(40);
     egui_style.visuals.widgets.inactive.bg_fill =
         get_aliased_color(&json, "{Alias.Color.Action.Default.value}");
-    // get_aliased_color(&json, "{Alias.Color.Action.Default.value}"); // too dark to see, especially for scroll bars
-
     {
         // Background colors for buttons (menu buttons, blueprint buttons, etc) when hovered or clicked:
         let hovered_color = get_aliased_color(&json, "{Alias.Color.Action.Hovered.value}");
@@ -122,17 +120,6 @@ pub fn get_dark_theme() -> egui::Style {
         egui_style.visuals.widgets.active.bg_fill = hovered_color;
         egui_style.visuals.widgets.open.weak_bg_fill = hovered_color;
         egui_style.visuals.widgets.open.bg_fill = hovered_color;
-    }
-
-    // Buttons
-    {
-        // egui_style.visuals.widgets.inactive.bg_stroke =
-        //     egui_style.visuals.widgets.hovered.bg_stroke;
-
-        // Turn off strokes around buttons:
-        // egui_style.visuals.widgets.hovered.bg_stroke = Default::default();
-        // egui_style.visuals.widgets.active.bg_stroke = Default::default();
-        // egui_style.visuals.widgets.open.bg_stroke = Default::default();
     }
 
     {
@@ -194,7 +181,6 @@ pub fn configure_fonts(ctx: &Context) {
     font_def.font_data.insert(
         "NotoSansMono".to_string(),
         FontData::from_static(include_bytes!("../assets/fonts/NotoSansMono-Medium.ttf")),
-        // FontData::from_static(include_bytes!("../assets/fonts/MesloLGS_NF_Regular.ttf")),
     );
 
     font_def
