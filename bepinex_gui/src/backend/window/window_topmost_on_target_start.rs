@@ -99,6 +99,7 @@ fn is_current_process_in_front_of_target_process_window(&self, target_process_id
     todo!()
 }
 
+#[cfg(target_os = "windows")]
 fn set_topmost_current_process_window(set_topmost: bool) {
     unsafe {
         static mut CURRENT_PROCESS_ID: u32 = 0;
@@ -133,4 +134,9 @@ fn set_topmost_current_process_window(set_topmost: bool) {
 
         EnumWindows(Some(enum_window), 0 as LPARAM);
     }
+}
+
+#[cfg(not(windows))]
+fn set_topmost_current_process_window(set_topmost: bool) {
+    todo!()
 }

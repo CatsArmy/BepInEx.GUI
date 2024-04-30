@@ -16,11 +16,14 @@ ProductName = "Lethal Company"
 FileDescription = "Lethal Company.exe"
 LegalCopyright = "Risk of Thunder"
 
+[profile]
+dev = {debug-assertions =true, debug =true, opt-level = 0 ,panic ="unwind", strip = false}
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 eframe = { git = "https://github.com/xiaoxiao921/egui/", features = ["persistence"] }
-serde = { version = "1.0.198", features = ["derive"] }
+serde = { version = "1.0.199", features = ["derive"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 byteorder = "1.5.0"
@@ -29,17 +32,34 @@ directories-next = "2.0.0"
 serde_json = "1.0.116"
 #Do not update reqwest it will cause issues  // Even the patches will do it...
 reqwest = { version = "0.11.17", features = ["blocking", "gzip"] } 
-winapi = {version = "0.3.9", features = ["tlhelp32"] }
+winapi = { version = "0.3.9", features = ["tlhelp32"] }
 strum = { version = "0.26.2", features = ["derive"] }
 zip = "0.6.6"
-sysinfo = "0.30.10"
+sysinfo = "0.30.11"
 crossbeam-channel = "0.5.12"
 image = "0.25.1"
 kernel32-sys = "0.2.2"
-# csbindgen = "1.9.1"
+tonic = "0.11.0"
+tonic-types = "0.11.0"
+prost-types = "0.12"
+prost = "0.12"
+tokio = { version ="*", features = ["full"] }
+tonic-build = "0.11.0"
+prost-build = "0.12.4"
 
 [build-dependencies]
-csbindgen = "1.9.1"
+tonic-build = "0.11.0"
+prost-build = "0.12.4"
+# tracing-tunnel = { version = "0.1.0", features = ["std", "sender", "receiver"] }
+# egui_tracing = "0.2.2"
+# tracing-actions = "0.3.1"
+# tracing-opentelemetry = "0.23.0"
+# flume = { version = "0.11.0" }
+
+# [flume.features]
+# async = ["futures-sink", "futures-core"]
+# eventual-fairness = ["select", "nanorand"]
+# default = ["async", "select", "eventual-fairness"]
 
 # all of this is taken from https://github.com/johnthagen/min-sized-rust
 [profile.release]
@@ -47,3 +67,5 @@ strip = true  # Automatically strip symbols from the binary.
 lto = true # perform "fat" LTO which attempts to perform optimizations across all crates within the dependency graph.
 codegen-units = 1 # improve the performance of generated code, but may be slower to compile.
 panic = "abort" # dont unwind, dont care
+
+

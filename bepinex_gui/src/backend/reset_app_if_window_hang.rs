@@ -1,10 +1,7 @@
 use crate::config;
 use super::process;
 use std:: {
-    process::Command,
-    process::exit,
-    env,
-    fs
+    env, fs, process::{exit, Command}
 };
 
 /// Bad serialized app settings can sometimes make

@@ -1,11 +1,13 @@
-use tracing_subscriber::{fmt, Registry};
-use tracing_subscriber::prelude::*;
-use crate::data::bepinex_log;
-use std::sync::Mutex;
 use std::fs::File;
+use std::sync::Mutex;
+
+use tracing_subscriber::prelude::*;
+use tracing_subscriber::{fmt, Registry};
+
+use crate::data::bepinex_log;
 
 pub fn init() {
-    bepinex_log::file::full_path().map_or_else(
+    bepinex_log::file::get_full_path().map_or_else(
         || {
             tracing_subscriber::fmt::init();
         },

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package packet;
+
+message LogPacketItem {
+    int32 level = 1;
+    string source = 2;
+    string data = 3;
+}
+
+message LogPacketRequest {
+    int32 level = 1;
+    string source = 2;
+    string data = 3;
+}
+
+message LogPacketResponse {
+    repeated LogPacketItem packet = 1;
+}
+
+service LogPacket {
+    rpc GetLogPackets (LogPacketRequest) returns (LogPacketResponse);
+}

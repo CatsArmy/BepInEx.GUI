@@ -1,26 +1,23 @@
 // build.rs
 
 #[cfg(windows)]
-fn main() {
-    extern crate winres;
+extern crate winres;
 
-    /*
-    csbindgen::Builder::default()
-        .input_extern_file("../source/BepInEx.GUI/bepinex_gui/../backend/network/builder.rs")
-        .input_extern_file(
-            "../source/BepInEx.GUI/bepinex_gui/../backend/network/packet_protocol.rs",
-        )
-        .csharp_namespace("BepInEx.GUI.Bridge")
-        .csharp_class_name("NativeMethods")
-        .csharp_dll_name("BepInEx.GUI.Loader.Rust")
-        .csharp_use_function_pointer(true)
-        .generate_csharp_file("../BepInEx.GUI.Loader/src/NativeMethods.cs")
-        .unwrap();
-    */
+#[cfg(windows)]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    std::env::set_var("PROTOC", "D:/Downloads/protoc-26.1-win64/bin/protoc.exe");
+     let tonic_build = tonic_build::configure()
+         .build_client(true)
+         .build_server(true)
+         .build_transport(true)
+         .out_dir("src/codegen/");
+    let _ = tonic_build.compile(&["src/proto/packet.proto"], &["src/proto"]);
 
     let mut res = winres::WindowsResource::new();
     res.set_icon("assets/icons/app_icon.ico");
     res.compile().unwrap();
+    
+    Ok(())
 }
 
 #[cfg(unix)]

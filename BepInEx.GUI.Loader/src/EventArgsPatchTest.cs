@@ -1,13 +1,9 @@
-﻿using System.Diagnostics;
-using BepInEx.Logging;
-using HarmonyLib;
+﻿namespace BepInEx.GUI.Loader;
 
-namespace BepInEx.GUI.Loader;
-
+#if false
 [HarmonyPatch(typeof(LogEventArgs))]
 public static class EventArgsPatchTest
 {
-
     public static Stopwatch Timer = Stopwatch.StartNew();
 
     internal static string FormatTimestamp()
@@ -170,3 +166,5 @@ public static class EventArgsPatchTest
 //                                  IL_0062: ldloc.2
 //	/* 0x00000967 2A           */ IL_0063: ret
 //} // end of method EventArgsPatchTest::ToString
+
+#endif

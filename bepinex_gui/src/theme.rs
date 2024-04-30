@@ -4,25 +4,24 @@ fn parse_color(color: &str) -> egui::Color32 {
     #![allow(clippy::identity_op)]
 
     let color = color.strip_prefix('#').unwrap();
-    if color.len() == 6 {
+    let radix = u32::from_str_radix(color, 16).unwrap();
+    match color.len() {
         // RGB
-        let color = u32::from_str_radix(color, 16).unwrap();
-        egui::Color32::from_rgb(
-            ((color >> 16) & 0xff) as u8,
-            ((color >> 8) & 0xff) as u8,
-            ((color >> 0) & 0xff) as u8,
-        )
-    } else if color.len() == 8 {
+        6 => egui::Color32::from_rgb(
+            ((radix >> 16) & 0xff) as u8,
+            ((radix >> 8) & 0xff) as u8,
+            ((radix >> 0) & 0xff) as u8,
+        ),
+
         // RGBA
-        let color = u32::from_str_radix(color, 16).unwrap();
-        egui::Color32::from_rgba_unmultiplied(
-            ((color >> 24) & 0xff) as u8,
-            ((color >> 16) & 0xff) as u8,
-            ((color >> 8) & 0xff) as u8,
-            ((color >> 0) & 0xff) as u8,
-        )
-    } else {
-        panic!()
+        8 => egui::Color32::from_rgba_unmultiplied(
+            ((radix >> 24) & 0xff) as u8,
+            ((radix >> 16) & 0xff) as u8,
+            ((radix >> 8) & 0xff) as u8,
+            ((radix >> 0) & 0xff) as u8,
+        ),
+
+        _ => panic!(),
     }
 }
 
@@ -111,6 +110,8 @@ pub fn get_dark_theme() -> egui::Style {
                                                                            // egui_style.visuals.widgets.inactive.bg_fill = Color32::from_gray(40);
     egui_style.visuals.widgets.inactive.bg_fill =
         get_aliased_color(&json, "{Alias.Color.Action.Default.value}");
+    // get_aliased_color(&json, "{Alias.Color.Action.Default.value}"); // too dark to see, especially for scroll bars
+
     {
         // Background colors for buttons (menu buttons, blueprint buttons, etc) when hovered or clicked:
         let hovered_color = get_aliased_color(&json, "{Alias.Color.Action.Hovered.value}");
@@ -120,6 +121,17 @@ pub fn get_dark_theme() -> egui::Style {
         egui_style.visuals.widgets.active.bg_fill = hovered_color;
         egui_style.visuals.widgets.open.weak_bg_fill = hovered_color;
         egui_style.visuals.widgets.open.bg_fill = hovered_color;
+    }
+
+    // Buttons
+    {
+        // egui_style.visuals.widgets.inactive.bg_stroke =
+        //     egui_style.visuals.widgets.hovered.bg_stroke;
+
+        // Turn off strokes around buttons:
+        // egui_style.visuals.widgets.hovered.bg_stroke = Default::default();
+        // egui_style.visuals.widgets.active.bg_stroke = Default::default();
+        // egui_style.visuals.widgets.open.bg_stroke = Default::default();
     }
 
     {
@@ -181,6 +193,7 @@ pub fn configure_fonts(ctx: &Context) {
     font_def.font_data.insert(
         "NotoSansMono".to_string(),
         FontData::from_static(include_bytes!("../assets/fonts/NotoSansMono-Medium.ttf")),
+        // FontData::from_static(include_bytes!("../assets/fonts/MesloLGS_NF_Regular.ttf")),
     );
 
     font_def

@@ -7,27 +7,20 @@ internal static class Log
 {
     private static ManualLogSource _logSource { set; get; }
 
-    internal static int Send(this Socket socket, LogPacket packet, bool isFirst)
+    internal static SocketError? Send(this Socket socket, LogPacket packet)
     {
-        int result = -1;
+        SocketError? error = null;
         try
         {
-            if (!isFirst && !socket.Connected)
-            {
-                return -1;
-            }
-            result = socket.Send(packet.Bytes
-                );//, 0, packet.Bytes.Length, SocketFlags.None, out SocketError errorCode);
-            //Debug(errorCode);
+            socket.Send(packet.Bytes, SocketFlags.None, out SocketError _error);
+            error = _error;
         }
         catch (Exception e)
         {
-            Error(socket);
-            Error(packet); //packet is not the issue --ruled out by testing
-            throw new Exception($"What the fuck?{Environment.NewLine}{e}");
+            Error(new Exception($"What the fuck?{Environment.NewLine}{e}"));
         }
 
-        return result;
+        return error;
     }
     internal static void Init() => _logSource = Logger.CreateLogSource(EntryPoint.GUID);
     internal static void Fatal(object data) => _logSource.LogFatal(data);

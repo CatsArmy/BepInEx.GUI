@@ -1,15 +1,18 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using BepInEx.Logging;
+using Instances;
 
 namespace BepInEx.GUI.Loader;
 
 internal class SendLogToClientSocket : ILogListener
 {
-    private readonly Process _process;
+    private static readonly IPAddress ipAddress = IPAddress.Parse(GUI_Socket_IP);
+    private readonly ProcessInstance _process;
     private readonly Thread _thread;
+    private readonly TcpClient _tcpClient;
 
     private readonly Queue<LogEventArgs> _logQueue = new();
     private readonly object _queueLock = new();
@@ -22,40 +25,47 @@ internal class SendLogToClientSocket : ILogListener
     private bool _hasFirstLog = false;
     private bool _isDisposed = false;
 
-    internal SendLogToClientSocket(Process process, int freePort)
+    internal SendLogToClientSocket(ProcessInstance process, int port)
     {
         _process = process;
-        _freePort = freePort;
-        _thread = new Thread(() =>
-        {
-            IPAddress ipAddress = IPAddress.Parse(GUI_Socket_IP);
-            TcpListener listener = new TcpListener(ipAddress, _freePort);
-            listener.Start();
-            Log.Info($"{PrefixLogs} Accepting Socket.");
-            for (int i = 0; i < 5; i++)
-            {
-                if (i == 4)
-                {
-                    Log.Warning($"{PrefixLogs} :: [i:{i} :: Last connection attempt] Accepting Socket.");
-                }
-                else if (i > 0)
-                {
-                    Log.Warning($"{PrefixLogs} :: [i:{i}] Accepting Socket.");
-                }
+        _freePort = port;
+        //TcpListener listener = new TcpListener(ipAddress, _freePort);
+        var endpoint = new IPEndPoint(ipAddress, port);
+        _tcpClient = new TcpClient(endpoint);
 
-                Socket clientSocket = listener.AcceptSocket();
-                if (_isDisposed)
-                {
-                    break;
-                }
+        //        _thread = new(() =>
+        //        {
+        //            listener.Start();
+        //#if !RELEASE
+        //            Log.Info($"{PrefixLogs} Accepting Socket.");
+        //#endif
+        //            for (int i = 0; i < 5; i++)
+        //            {
+        //#if !RELEASE
+        //                if (i == 4)
+        //                {
+        //                    Log.Warning($"{PrefixLogs} :: [i:{i} :: Last connection attempt] Accepting Socket.");
+        //                }
+        //                else if (i > 0)
+        //                {
+        //                    Log.Warning($"{PrefixLogs} :: [i:{i}] Accepting Socket.");
+        //                }
+        //#endif
+        //                Socket clientSocket = listener.AcceptSocket();
+        //                if (_isDisposed)
+        //                {
+        //                    break;
+        //                }
 
-                SendPacketsToClientUntilConnectionIsClosed(clientSocket);
-                Thread.Sleep(SLEEP_MILLISECONDS);
-            }
-            Log.Error($"{PrefixLogs} :: [Listener has encountered too many lost connections to GUI aborting connection]");
-        });
+        //                SendPacketsToClientUntilConnectionIsClosed(clientSocket);
+        //                Thread.Sleep(SLEEP_MILLISECONDS);
 
-        _thread.Start();
+        //            }
+        //#if !RELEASE
+        //            Log.Error($"{PrefixLogs} :: [Listener has encountered too many lost connections to GUI aborting connection]");
+        //#endif
+        //        });
+        //        _thread.Start();
     }
 
     /// <summary>
@@ -71,16 +81,6 @@ internal class SendLogToClientSocket : ILogListener
                 break;
             }
 
-            if (_hasFirstLog)
-            {
-                if (!socket.Connected || !socket.IsBound)
-                {
-                    Log.Debug($"{PrefixLogs} :: [Connection failure] :: Socket has lost connection with the GUI");
-                    Log.Debug($"[Socket {(socket.Connected ? "Is Connected" : "Is not Connected")}]");
-                    Log.Debug($"[Socket {(socket.IsBound ? "Is Bound" : "Is not bound")}]");
-                }
-            }
-
             while (_logQueue.Count > 0)
             {
                 LogEventArgs log;
@@ -92,7 +92,7 @@ internal class SendLogToClientSocket : ILogListener
                 LogPacket logPacket = new LogPacket(log);
                 try
                 {
-                    socket.Send(logPacket, _hasFirstLog);
+                    socket.Send(logPacket);
                 }
                 catch (Exception e)
                 {
@@ -140,6 +140,53 @@ internal class SendLogToClientSocket : ILogListener
             return;
         }
 
+        if (Config.CloseWindowWhenGameLoadedConfig.Value)
+        {
+            if ($"{eventArgs.Data}" != "Chainloader startup complete" || !eventArgs.Level.Equals(LogLevel.Message))
+            {
+                KillBepInExGUIProcess();
+                return;
+            }
+        }
+
+        LogEventInternal(sender, eventArgs).Wait();
+    }
+    internal async Task LogEventInternal(object sender, LogEventArgs eventArgs)
+    {
+        LogPacket packet = new LogPacket(eventArgs);
+        int len = packet.Bytes.Length;
+        var client = _tcpClient;
+        await client.ConnectAsync(ipAddress, _freePort);
+        var send = await client.Client.SendAsync(packet.Bytes, SocketFlags.None);
+        //TODO optimize this
+        byte[] bytes = new byte[Encoding.UTF8.GetBytes("success").Length];
+        const string success = nameof(success);
+        const string failure = nameof(failure);
+        await client.Client.ReceiveAsync(bytes, SocketFlags.None);
+        string response = Encoding.UTF8.GetString(bytes);
+        if (response == failure)
+        {
+            send = await client.Client.SendAsync(packet.Bytes, SocketFlags.None);
+        }
+        if (response == success)
+        {
+
+        }
+
+    }
+    public void _LogEvent(object sender, LogEventArgs eventArgs)
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        if (eventArgs.Data == null)
+        {
+            Log.Warning("EventArgs is potentialy null");
+            return;
+        }
+
         if (!_hasFirstLog)
         {
             if (eventArgs.Level == LogLevel.Message &&
@@ -150,20 +197,23 @@ internal class SendLogToClientSocket : ILogListener
             }
         }
 
-        if ($"{eventArgs.Data}" != "Chainloader startup complete" || !eventArgs.Level.Equals(LogLevel.Message))
+
+        if (Config.CloseWindowWhenGameLoadedConfig.Value)
         {
-            if (Config.CloseWindowWhenGameLoadedConfig.Value)
+            if ($"{eventArgs.Data}" != "Chainloader startup complete" || !eventArgs.Level.Equals(LogLevel.Message))
             {
                 KillBepInExGUIProcess();
                 return;
             }
         }
 
+
         lock (_queueLock)
         {
             _logQueue.Enqueue(eventArgs);
         }
     }
+
     public void Dispose()
     {
         _isDisposed = true;

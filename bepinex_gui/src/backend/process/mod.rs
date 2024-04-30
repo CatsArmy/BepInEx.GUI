@@ -1,3 +1,11 @@
+use std::{
+    io,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    thread, time,
+};
 use sysinfo::Pid;
 use winapi::{
     shared::{
@@ -7,49 +15,33 @@ use winapi::{
     um::{
         processthreadsapi::GetCurrentProcessId,
         winuser::{EnumWindows, GetWindowThreadProcessId, IsHungAppWindow},
-    }
-};
-use std::{
-     io, sync::{
-     atomic::{
-        AtomicBool,
-        Ordering,
-     }, Arc
-    }, thread, time
+    },
 };
 
 #[cfg(windows)]
 pub fn resume(target_process_id: Pid) -> bool {
     unsafe {
-        let sys = sysinfo::System::new_all();
-        let _proc = sys.process(target_process_id);
-        if let Some(_proc) = _proc {
-            kernel32::DebugActiveProcessStop(target_process_id.as_u32());
-        }
+        kernel32::DebugActiveProcessStop(target_process_id.as_u32());
     }
     return true;
 }
 
 #[cfg(not(windows))]
 pub fn resume(target_process_id: Pid) -> bool {
-    !todo!()
+    todo!()
 }
 
 #[cfg(windows)]
 pub fn suspend(target_process_id: Pid) -> bool {
     unsafe {
-        let sys = sysinfo::System::new_all();
-        let _proc = sys.process(target_process_id);
-        if let Some(_proc) = _proc {
-            kernel32::DebugActiveProcess(target_process_id.as_u32());
-        }
+        kernel32::DebugActiveProcess(target_process_id.as_u32());
     }
     return true;
 }
 
 #[cfg(not(windows))]
 pub fn suspend(target_process_id: Pid) -> bool {
-    !todo!()
+    todo!()
 }
 
 pub fn spawn_thread_is_process_dead(
@@ -117,7 +109,7 @@ pub fn spawn_thread_check_if_process_is_hung(callback: impl Fn() + std::marker::
                 if IsHungAppWindow(WINDOW_HANDLE) == 1 {
                     if i == 3 {
                         callback();
-                        tracing::info!("callback called!");
+                        tracing::info!("called callback!");
                         return Ok(());
                     }
 
@@ -131,8 +123,10 @@ pub fn spawn_thread_check_if_process_is_hung(callback: impl Fn() + std::marker::
 }
 
 #[cfg(not(windows))]
-pub(crate) fn spawn_thread_check_if_process_is_hung(target_process_id: Pid,
+pub(crate) fn spawn_thread_check_if_process_is_hung(
+    target_process_id: Pid,
     should_check: Arc<AtomicBool>,
-    out_true_when_process_is_dead: Arc<AtomicBool>) {
-        !todo!()
+    out_true_when_process_is_dead: Arc<AtomicBool>,
+) {
+    todo!()
 }
