@@ -14,8 +14,11 @@ namespace Instances
 
         private readonly ProcessStartInfo _processStartInfo;
 
-        public ProcessArguments(string path, string arguments) :
-            this(new ProcessStartInfo { FileName = path, Arguments = arguments })
+        public ProcessArguments(string path, string arguments) : this(new ProcessStartInfo
+        {
+            FileName = path,
+            Arguments = arguments
+        })
         { }
 
         public ProcessArguments(ProcessStartInfo processStartInfo)
@@ -42,13 +45,12 @@ namespace Instances
                 StartInfo = _processStartInfo,
                 EnableRaisingEvents = true,
             };
-
+            //var (b, c, d) = ProcessX.GetDualAsyncEnumerable(_processStartInfo);
             var instance = new ProcessInstance(process, IgnoreEmptyLines, DataBufferCapacity);
 
             instance.Exited += Exited;
             instance.OutputDataReceived += OutputDataReceived;
             instance.ErrorDataReceived += ErrorDataReceived;
-
             try
             {
                 process.Start();

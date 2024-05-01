@@ -94,10 +94,10 @@ internal class SendLogToClientSocket : ILogListener
                 {
                     socket.Send(logPacket);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Log.Error($"Error while trying to send log to socket: {e}{Environment.NewLine}Disconnecting socket.");
-                    throw e;
+                    Log.Error($"Error while trying to send log to socket: {Environment.NewLine}Disconnecting socket.");
+                    throw;
                 }
 
                 lock (_queueLock)

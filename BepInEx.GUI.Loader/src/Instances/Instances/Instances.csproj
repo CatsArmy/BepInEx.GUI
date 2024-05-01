@@ -1,13 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>8</LangVersion>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>8.0</LangVersion>
         <Nullable>enable</Nullable>
         <PackageId>Instances</PackageId>
         <Title>Instances</Title>
         <Authors>Malte Rosenbjerg</Authors>
-        <Description>A .NET Standard Process wrapper with an elegant API, for both asyncronous and syncronous use, providing both Events and support for Tasks with cancellation support</Description>
+        <Description>
+            A .NET Standard Process wrapper with an elegant API, for both asyncronous and syncronous use, providing both Events and support for Tasks with cancellation support
+        </Description>
         <Copyright>Rosenbjerg Softworks</Copyright>
         <PackageProjectUrl>https://github.com/rosenbjerg/Instances</PackageProjectUrl>
         <PackageTags>instances instance process async task events run exec</PackageTags>
@@ -22,6 +24,8 @@
       <Content Include="..\README.md">
         <Link>README.md</Link>
       </Content>
+      <PackageReference Include="UniTask" Version="2.5.4" />
+      <PackageReference Include="ProcessX" Version="1.5.5" />
     </ItemGroup>
 
 </Project>

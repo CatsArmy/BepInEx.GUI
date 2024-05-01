@@ -3,7 +3,7 @@ use crossbeam_channel::Sender;
 use std::net::IpAddr;
 use std::net::Ipv4Addr;
 use std::net::SocketAddr;
-use std::net::TcpStream;
+
 use std::net::*;
 use std::thread;
 
@@ -45,15 +45,15 @@ impl LogReceiver {
     fn thread_loop(
         inst: LogReceiver,
         server_address: SocketAddr,
-        num_of_connection_attempts: u32,
+        _num_of_connection_attempts: u32,
         num_of_read_packet_attempts: u32,
     ) {
         let foo = TcpListener::bind(server_address).expect("");
         
         
-        let mut connection_attempts = 0;
+        let _connection_attempts = 0;
         loop {
-            let (mut tcp_stream, b) = foo.accept().expect("");
+            let (mut tcp_stream, _b) = foo.accept().expect("");
             //let tcp_stream = TcpStream::connect(server_address);
             // if let Err(tcp_stream) = tcp_stream {
             //     tracing::error!("Failed connecting: {}", tcp_stream);

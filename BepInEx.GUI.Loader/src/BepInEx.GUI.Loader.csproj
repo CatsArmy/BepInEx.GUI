@@ -21,6 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
+	<PackageReference Include="System.Drawing.Common" Version="8.0.4" />
+	
 	<PackageReference Include="BepInEx.Core" Version="5.4.21">
 		<PrivateAssets>contentFiles; analyzers; build</PrivateAssets>
 		<IncludeAssets>all</IncludeAssets>
@@ -35,38 +37,82 @@
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	</PackageReference>
-	
-	<PackageReference Include="System.Drawing.Common" Version="8.0.4" />
-	
-	<PackageReference Include="UnityEngine.Modules" Version="2022.3.9">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	</PackageReference>
 
-	<PackageReference Include="Microsoft.Unity.Analyzers" Version="1.19.0">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	</PackageReference>
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <PackageReference Include="Microsoft.Unity.Analyzers" Version="1.19.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="UniTask" Version="2.5.4" />
+    <PackageReference Include="ProcessX" Version="1.5.5" />
+    <!--<PackageReference Include="SimdLinq" Version="1.3.2" />-->
+    
+    <!--<PackageReference Include="Ulid" Version="1.3.3" />
+    <PackageReference Include="Ulid.MessagePack" Version="1.3.3" />
+    <PackageReference Include="Ulid.SystemTextJson" Version="1.3.3" />
+    
+    <PackageReference Include="ZString" Version="2.6.0" />
+    <PackageReference Include="ValueTaskSupplement" Version="1.1.0" />
+    <PackageReference Include="Utf8StringInterpolation" Version="1.3.1" />
+    <PackageReference Include="Utf8StreamReader" Version="1.3.2" />
+    -->
+    
+    <!--<PackageReference Include="MagicOnion" Version="6.1.2" />-->
+    <!--<PackageReference Include="MagicOnion.Client" Version="6.1.2" />
+    <PackageReference Include="MagicOnion.Server" Version="6.1.2" />
+    <PackageReference Include="MagicOnion.Shared" Version="6.1.2" />-->
+    <!--<PackageReference Include="MagicOnion.Abstractions" Version="6.1.2" />-->
+    <!--<PackageReference Include="MagicOnion.GeneratorCore" Version="5.1.8" />-->
+    <!--<PackageReference Include="MagicOnion.Serialization.MemoryPack" Version="6.1.2-preview" />
+    <PackageReference Include="MagicOnion.Serialization.MessagePack" Version="6.1.2" />-->
+    <!--<PackageReference Include="Grpc.Net.Client" Version="2.62.0" />-->
+    
+    <PackageReference Include="MessagePack" Version="2.5.140" />
+    <PackageReference Include="MessagePack.Annotations" Version="2.5.140" />
+    <!--<PackageReference Include="MessagePack.ImmutableCollection" Version="2.5.140" />-->
+    <PackageReference Include="MessagePack.UnityShims" Version="2.5.140" />
+    <!--<PackageReference Include="MessagePack.MSBuild.Tasks" Version="2.5.140">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MessagePackAnalyzer" Version="2.5.140">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>-->
+
+    <PackageReference Include="MessagePipe" Version="1.8.1" />
+    <PackageReference Include="MessagePipe.Interprocess" Version="1.8.1" />
+    <PackageReference Include="MessagePipe.Analyzer" Version="1.8.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <!--
+    <PackageReference Include="MasterMemory" Version="2.4.4" />
+    <PackageReference Include="MasterMemory.MSBuild.Tasks" Version="2.4.4" />
+    <PackageReference Include="MasterMemory.Annotations" Version="2.4.4" />
+    
+    <PackageReference Include="MemoryPack" Version="1.21.1" />
+    <PackageReference Include="MemoryPack.UnityShims" Version="1.21.1" />
+    <PackageReference Include="MemoryPack.Streaming" Version="1.21.1" />
+    <PackageReference Include="MemoryPack.Core" Version="1.21.1" />
+    <PackageReference Include="MemoryPack.Generator" Version="1.21.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>-->
   </ItemGroup>
 
   <ItemGroup>
 	<ProjectReference Include="Instances\Instances\Instances.csproj" />
-
-
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="PowerShell.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>PowerShell.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="PowerShell.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PowerShell.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

@@ -9,8 +9,10 @@ using System.Reflection;
 using System.Threading.Tasks;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using Cysharp.Threading.Tasks;
 using Instances;
 using Mono.Cecil;
+
 
 namespace BepInEx.GUI.Loader;
 
@@ -45,7 +47,7 @@ internal static class EntryPoint
         Log.Init();
         try
         {
-            InitializeInternal();
+            //InitializeInternal();
         }
         catch (Exception e)
         {
@@ -53,17 +55,16 @@ internal static class EntryPoint
         }
     }
 
-#if false
-	/// <summary>
-	/// Called after preloader has patched all assemblies and loaded them in
-	/// Called after preloader has patched all assemblies and loaded them in
-	/// </summary> 
-	public static void Finish()
-	{
-		_harmony = new Harmony(EntryPoint.GUID);
-		_harmony.PatchAll(typeof(EventArgsPatchTest));
-	}
-#endif
+
+    /// <summary>
+    /// Called after preloader has patched all assemblies and loaded them in
+    /// Called after preloader has patched all assemblies and loaded them in
+    /// </summary> 
+    public static void Finish()
+    {
+
+    }
+
 
     private static void InitializeInternal()
     {
@@ -261,12 +262,9 @@ internal static class EntryPoint
 
         string icon = SavedIcon(icon_dir);
         SaveIcon(icon_dir).Wait();
-        if (icon == null)
-            icon = SaveIcon(icon_dir).Result;
-        if (icon == null)
-            icon = SavedIcon(icon_dir);
-        if (icon == null)
-            icon = "None";
+        SaveIcon(icon_dir).Wait();
+        icon ??= SavedIcon(icon_dir);
+        icon ??= "None";
 
         string[] argList =
         [
@@ -296,40 +294,15 @@ internal static class EntryPoint
 
         return processStartInfo;
     }
-    private static async Task<string> SaveIcon(DirectoryInfo icon_dir)
+    private static async Task SaveIcon(DirectoryInfo icon_dir)
     {
-        string powershell = icon_dir.FullName;
-        if (!powershell.EndsWith('\\'))
-        {
-            powershell += '\\';
-        }
-        powershell += "CopyInfo.ps1";
-
         string icon_file = icon_dir.FullName;
         if (!icon_file.EndsWith('\\'))
         {
             icon_file += '\\';
         }
         icon_file += "icon.png";
-        if (!await SaveShell(powershell, icon_file))
-        {
-            return null;
-        }
-
-
-        ProcessArguments shellargs = new ProcessArguments("powershell.exe",
-            $"-NoProfile -ExecutionPolicy ByPass -File \"{powershell}\"");
-        ProcessInstance shell = shellargs.Start();
-
-        shell.ErrorDataReceived += delegate (object _, string data)
-        {
-            if (data == "Script is done")
-            {
-                shell.Kill();
-            }
-        };
-
-        return icon_file;
+        await SaveShell(icon_file);
     }
 
     /// <param name="path"></param>
@@ -369,28 +342,8 @@ internal static class EntryPoint
     }
 
 
-    private static async Task<bool> SaveShell(string powershell, string icon_file)
+    private static async UniTask SaveShell(string icon_file)
     {
-        if (File.Exists(powershell))
-        {
-            return true;
-        }
-
-        string Shell = $"{PowerShell.Script}Export-Icon -Path \"{Paths.ExecutablePath}\" -Destination \"{icon_file}\" ";
-
-        FileStream fileStream = File.Create(powershell);
-        try
-        {
-            UTF8Encoding UTF8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-            byte[] bytes = UTF8.GetBytes(Shell);
-            await fileStream.WriteAsync(bytes, 0, bytes.Length);
-            await fileStream.FlushAsync();
-        }
-        catch (Exception)
-        {
-            return File.Exists(powershell);
-        }
-
-        return true;
+        Shell.RunShell(Paths.ExecutablePath, icon_file);
     }
 }
