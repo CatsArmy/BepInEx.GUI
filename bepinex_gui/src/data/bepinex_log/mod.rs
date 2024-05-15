@@ -5,6 +5,8 @@ use strum::{Display, EnumCount, EnumIter};
 
 pub mod file;
 pub mod receiver;
+pub mod receiver_v2;
+pub mod packet_protocol;
 
 #[allow(dead_code)]
 #[derive(

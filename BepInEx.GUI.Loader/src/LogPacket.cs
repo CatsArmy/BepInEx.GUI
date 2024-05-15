@@ -15,9 +15,12 @@ internal struct LogPacket
     /// </code> </summary>
     internal byte[] Bytes;
     private readonly LogEventArgs log;
-
+    public static void SendFFI(LogEventArgs args){
+        
+    }
     internal unsafe LogPacket(LogEventArgs log)
     {
+        
         this.log = log;
         byte[] logStringByteArray = Encoding.UTF8.GetBytes(log.ToString());
 

@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BepInEx.Logging;
 using Instances;
+using static BepInEx.GUI.Loader.Rust.NativeMethods;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace BepInEx.GUI.Loader;
 
@@ -27,12 +29,14 @@ internal class SendLogToClientSocket : ILogListener
 
     internal SendLogToClientSocket(ProcessInstance process, int port)
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
         _process = process;
         _freePort = port;
+
         //TcpListener listener = new TcpListener(ipAddress, _freePort);
         var endpoint = new IPEndPoint(ipAddress, port);
         _tcpClient = new TcpClient(endpoint);
-
+        send(new Rust.LogEventRaw("World!", LogLevel.Info, "Hello ", new Rust.Version(-1, -1, -1)));
         //        _thread = new(() =>
         //        {
         //            listener.Start();
@@ -56,10 +60,10 @@ internal class SendLogToClientSocket : ILogListener
         //                {
         //                    break;
         //                }
-
+        //
         //                SendPacketsToClientUntilConnectionIsClosed(clientSocket);
         //                Thread.Sleep(SLEEP_MILLISECONDS);
-
+        //
         //            }
         //#if !RELEASE
         //            Log.Error($"{PrefixLogs} :: [Listener has encountered too many lost connections to GUI aborting connection]");
@@ -108,7 +112,16 @@ internal class SendLogToClientSocket : ILogListener
         }
 
     }
+    //public class LogPacketService : Packet.LogPacket.LogPacketBase
+    //{
+    //    public override Task<LogPacketResponse> GetLogPackets(LogPacketRequest request, ServerCallContext context)
+    //    {
+    //        //place with in the queue lock
+    //        new Packet.LogPacketItem { Data = data, Level = level, Source = source };
 
+    //        return Task.FromResult();
+    //    }
+    //}
     private void KillBepInExGUIProcess()
     {
         Log.Message("Closing BepInEx.GUI");
@@ -174,6 +187,7 @@ internal class SendLogToClientSocket : ILogListener
         }
 
     }
+
     public void _LogEvent(object sender, LogEventArgs eventArgs)
     {
         if (_isDisposed)

@@ -76,7 +76,7 @@ pub const fn small_rounding() -> f32 {
 // taken from https://github.com/rerun-io/rerun/blob/main/crates/re_ui/src/design_tokens.rs#L25
 pub fn get_dark_theme() -> egui::Style {
     let json: serde_json::Value =
-        serde_json::from_str(include_str!("../assets/design_tokens.json"))
+        serde_json::from_str(include_str!("assets/design_tokens.json"))
             .expect("Failed to parse data/design_tokens.json");
 
     let mut egui_style = egui::Style {
@@ -192,7 +192,7 @@ pub fn configure_fonts(ctx: &Context) {
     let mut font_def = FontDefinitions::default();
     font_def.font_data.insert(
         "NotoSansMono".to_string(),
-        FontData::from_static(include_bytes!("../assets/fonts/NotoSansMono-Medium.ttf")),
+        FontData::from_static(include_bytes!("assets/fonts/NotoSansMono-Medium.ttf")),
         // FontData::from_static(include_bytes!("../assets/fonts/MesloLGS_NF_Regular.ttf")),
     );
 

@@ -3,7 +3,6 @@ use crossbeam_channel::Sender;
 use std::net::IpAddr;
 use std::net::Ipv4Addr;
 use std::net::SocketAddr;
-
 use std::net::*;
 use std::thread;
 
@@ -12,6 +11,9 @@ use crate::data::bepinex_mod::BepInExMod;
 
 use super::BepInExLogEntry;
 use super::LogLevel;
+
+
+pub static mut GUI: Option<LogReceiver> = Option::None;
 
 #[derive(Clone)]
 pub struct LogReceiver {
@@ -42,6 +44,7 @@ impl LogReceiver {
         thread::spawn(move || Self::thread_loop(inst, server_address, 5, 10));
     }
 
+    #[allow(unreachable_code)]
     fn thread_loop(
         inst: LogReceiver,
         server_address: SocketAddr,
@@ -51,7 +54,7 @@ impl LogReceiver {
         let foo = TcpListener::bind(server_address).expect("");
         
         
-        let _connection_attempts = 0;
+        let mut _connection_attempts = 0;
         loop {
             let (mut tcp_stream, _b) = foo.accept().expect("");
             //let tcp_stream = TcpStream::connect(server_address);
@@ -64,8 +67,7 @@ impl LogReceiver {
             //     }
             // }
             let mut read_packet_attempts = 0;
-            //let mut tcp_stream =
-            //    tcp_stream.expect("Failed connecting after check somehow. what how?");
+            //let mut tcp_stream = tcp_stream.expect("Failed connecting after check somehow. what how?");
             loop {
                 let packet_lenght = packet_protocol::read_packet_length(&mut tcp_stream);
                 if let Err(packet_lenght) = packet_lenght {

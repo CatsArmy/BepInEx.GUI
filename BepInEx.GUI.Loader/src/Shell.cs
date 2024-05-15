@@ -1,18 +1,46 @@
 ﻿using MonoMod.Utils;
 using static Zx.Env;
 
+
 namespace BepInEx.GUI.Loader
 {
+
+
     internal static class Shell
     {
         public static async void RunShell(string Path, string Destination)
         {
 
+            //new MagicOnion.Generator.MagicOnionCompiler()
+            Uri uri = new Uri("127.0.0.1::{port}");
+            var a = Grpc.Net.Client.GrpcChannel.ForAddress(uri);
+            var invoker = a.CreateCallInvoker();
+
+            //var b = MagicOnion.Client.MagicOnionClient.Create<Packet.LogPacketItem>(invoker);
+            //YetAnotherHttpHandler handler = new YetAnotherHttpHandler();
+            //var a = new MagicOnion.Generator.MagicOnionCompiler(null, null);
+            //a.GenerateFileAsync
+            //var a = Grpc.Net.Client.GrpcChannel.ForAddress();
+            //var b = new Grpc.Net.Client.GrpcChannelOptions();
+
+            //Grpc.Net.Client.GrpcChannel
+            //ProtoBuf.Grpc.Configuration
+            //ProtoBuf.Grpc.Client.GrpcClientFactory.CreateGrpcService;
+
             //if windows or powershell
             if (PlatformHelper.Is(Platform.Windows))
             {
                 shell = "powershell.exe -NoProfile";
-                const string Export_Icon =
+
+
+                string args =
+                       $@"-{nameof(Path)} ""{Path}""" +
+                       $@"-{nameof(Destination)} ""{Destination}""";
+
+                _ = await run($"{Export_Icon}{Environment.NewLine}Export-Icon {args}");
+            }
+        }
+        private const string Export_Icon =
                 @"Add-Type -AssemblyName System.Drawing
                 function Export-Icon {
                 [CmdletBinding()]
@@ -47,15 +75,7 @@ namespace BepInEx.GUI.Loader
 
                 echo ""Script is done""
                 }";
-                _ = await run($"{Export_Icon}{Environment.NewLine}Export-Icon {(
-                    $@"-{nameof(Path)} ""{Path}""" +
-                    $@"-{nameof(Destination)} ""{Destination}""")}");
-                //_ = await run($"{Export_Icon}{Environment.NewLine}{"Export-Icon " +
-                //    "-Path \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Lethal Company\\Lethal Company.exe\" " +
-                //    "-Destination \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Lethal Company\\BepInEx.GUI.Icon\\icon.png\""}");
 
-            }
-        }
     }
 }
 
