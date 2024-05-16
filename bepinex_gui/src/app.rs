@@ -3,21 +3,18 @@ use views::tabs::{console::ConsoleTab, general::GeneralTab, settings::SettingsTa
 use crate::backend::{process, window};
 use crate::config::launch::AppLaunchConfig;
 use crate::config::Config;
-use crate::data::bepinex_log::receiver::{self, LogReceiver};
+use crate::data::bepinex_log::receiver::LogReceiver;
 use crate::data::bepinex_log::BepInExLogEntry;
 use crate::data::bepinex_mod::BepInExMod;
 use crate::views::disclaimer::Disclaimer;
 use crate::{theme, views};
 
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::Receiver;
 use eframe::CreationContext;
 use eframe::{self, *};
 use std::sync::{atomic::AtomicBool, Arc};
 use std::time::Duration;
 use sysinfo::Pid;
-
-use crate::data::bepinex_log::packet_protocol::*;
-
 pub const NAME: &str = "BepInEx GUI";
 
 pub struct BepInExGUI {

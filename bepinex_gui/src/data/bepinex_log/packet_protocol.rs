@@ -1,24 +1,18 @@
-use crate::data::bepinex_log::receiver_v2::receiver;
+use std::cell::RefCell;
+
+use super::receiver_v2::LogReceiverV2;
+
+#[allow(non_upper_case_globals)]
+pub static mut receiver: Option<RefCell<LogReceiverV2>> = Option::None;
 
 #[no_mangle]
 pub extern "C" fn send(log: LogEventRaw) {
-    let log_event = log.to_log_event();
     unsafe {
-        let r = receiver.expect("msg");
-        let ss = r.source_sender;
-        let sr = r.source_receiver;
-        let ls = r.log_senders;
-        let lr = r.log_receiver;
-        let mut f = false;
-        ss.iter().for_each(move |source| {
-            if source.source == log_event.source.source {
-                f = true;
-            }
-        });
-        if !f {
-            //add it
-            //too complex for brain need to rethink or get help
-            //im ded 💀☠️☠️☠️☠️
+        if let Some(r) = receiver.as_ref() {
+        //.expect("expected reciver to be a some");
+        let mut r = r.to_owned();
+        let r = r.get_mut();
+            r.send(log.to_log_event());
         }
     }
 }
@@ -33,16 +27,8 @@ pub unsafe fn csharp_to_rust_utf8(utf8_str: *const u8, utf8_len: i32) -> String 
 #[derive(Clone)]
 #[allow(non_camel_case_types)]
 pub struct Utf8Str_cs {
-    utf8_str: *const u8,
-    utf8_len: i32,
-}
-
-impl Utf8Str_cs {
-    fn to_string(self) -> String {
-        unsafe {
-            return csharp_to_rust_utf8(self.utf8_str, self.utf8_len);
-        }
-    }
+    pub utf8_str: *const u8,
+    pub utf8_len: i32,
 }
 
 #[repr(C)]
@@ -52,31 +38,11 @@ pub struct LogEventRaw {
     pub source: LogSourceRaw,
 }
 
-impl LogEventRaw {
-    pub fn to_log_event(self) -> LogEvent {
-        LogEvent {
-            data: self.data.to_string(),
-            level: self.level,
-            source: self.source.to_log_source(),
-            is_selected: false,
-        }
-    }
-}
-
 #[repr(C)]
 #[derive(Clone)]
 pub struct LogSourceRaw {
     pub source: Utf8Str_cs,
     pub version: Version,
-}
-
-impl LogSourceRaw {
-    pub fn to_log_source(self) -> LogSource {
-        LogSource {
-            source: self.source.to_string(),
-            version: self.version,
-        }
-    }
 }
 
 #[repr(C)]
@@ -92,6 +58,7 @@ pub struct LogSource {
     pub source: String,
     pub version: Version,
 }
+
 
 #[derive(Clone)]
 pub struct LogEvent {

@@ -13,6 +13,7 @@ pub mod logger;
 pub mod theme;
 pub mod views;
 
+#[allow(dead_code)]
 fn main() {
     logger::init();
     backend::init();

@@ -1,29 +1,46 @@
 use crossbeam_channel::{Receiver, Sender};
-use hashbrown::HashMap;
-use std::thread;
+use std::{cell::RefCell, thread};
 
-use crate::data::bepinex_log::packet_protocol::*;
-
-#[allow(non_upper_case_globals)]
-pub static mut receiver: Option<LogReceiverV2> = Option::None;
+use crate::data::{self, bepinex_log::packet_protocol::*};
 
 #[derive(Clone)]
 pub struct LogReceiverV2 {
-    pub source_sender: Vec<LogSource>,
-    pub source_receiver: Vec<Receiver<LogSource>>,
-    pub log_senders: HashMap<LogSource, Sender<LogEvent>>,
-    pub log_receiver: HashMap<LogSource, Receiver<LogEvent>>,
+    pub log_events: RefCell<hashbrown::HashMap<LogSource, LogEvent>>,
+    pub log_senders: Sender<LogEvent>,
+    pub log_receiver: Receiver<LogEvent>,
 }
 
 impl LogReceiverV2 {
     pub fn new() -> LogReceiverV2 {
-        let (general_tab_mod_s, general_tab_mod_r): (Sender<LogEvent>, Receiver<LogEvent>) =
-            crossbeam_channel::unbounded();
+        let (s, r): (Sender<LogEvent>, Receiver<LogEvent>) = crossbeam_channel::unbounded();
+
+        let mut map = hashbrown::HashMap::new();
+        let mut mapa: hashbrown::HashMap<LogSource, LogEvent> = hashbrown::HashMap::default();
+
+
+        let log_receiver = LogReceiverV2 {
+            log_events: RefCell::from(map),
+            log_senders: s,
+            log_receiver: r,
+        };
+        unsafe {
+            let cell = RefCell::from(log_receiver.clone());
+            data::bepinex_log::packet_protocol::receiver = Some(cell);
+        }
+        return log_receiver;
+    }
+
+    pub fn send(&mut self, event: LogEvent) {
+        let log_events = self.log_events.borrow_mut();
+
+        if !(log_events
+            .keys()
+            .any(|log| log.source == event.source.source))
+        {
             
-        let (console_tab_mod_s, console_tab_mod_r): (Sender<LogSource>, Receiver<LogSource>) =
-            crossbeam_channel::unbounded();
-            //hashbrown::HashSet
-     }
+        } else {
+        }
+    }
 
     pub fn start_thread_loop(&self) {
         let inst = self.clone();

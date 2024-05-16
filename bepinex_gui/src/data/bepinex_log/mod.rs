@@ -1,7 +1,10 @@
 use eframe::emath::Numeric;
+use std::hash::{Hash, Hasher};
 
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumCount, EnumIter};
+
+use self::packet_protocol::*;
 
 pub mod file;
 pub mod receiver;
@@ -87,5 +90,65 @@ impl BepInExLogEntry {
 
     pub fn data_lowercase(&self) -> &str {
         self.data_lowercase.as_ref()
+    }
+}
+
+impl Hash for LogEvent {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.source.hash(state);
+    }
+}
+
+impl PartialEq for LogEvent {
+    fn eq(&self, other: &Self) -> bool {
+        return self.source == other.source;
+    }
+    
+    fn ne(&self, other: &Self) -> bool {
+        return self.source != other.source;
+    }
+}
+impl Hash for LogSource {
+    fn hash<H: Hasher>(&self, state: &mut H){
+        self.source.hash(state);
+    }
+}
+
+impl PartialEq for LogSource {
+    fn eq(&self, other: &Self) -> bool {
+        return self.source == other.source;
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        return self.source != other.source;
+    }
+}
+
+impl LogSourceRaw {
+    pub fn to_log_source(self) -> LogSource {
+        LogSource {
+            source: self.source.to_string(),
+            version: self.version,
+        }
+    }
+}
+
+impl LogEventRaw {
+    pub fn to_log_event(self) -> LogEvent {
+        LogEvent {
+            data: self.data.to_string(),
+            level: self.level,
+            source: self.source.to_log_source(),
+            is_selected: false,
+        }
+    }
+}
+
+
+impl Utf8Str_cs {
+    fn to_string(self) -> String {
+        unsafe {
+            return csharp_to_rust_utf8(self.utf8_str, self.utf8_len);
+        }
     }
 }
