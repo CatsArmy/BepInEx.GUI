@@ -6,9 +6,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
 
-use sysinfo::Pid;
-use sysinfo::ProcessExt;
-use sysinfo::SystemExt;
+use sysinfo::{Pid, PidExt, ProcessExt, SystemExt};
 use winapi::um::winnt::HANDLE;
 use winapi::{
     shared::{
@@ -24,7 +22,6 @@ use winapi::{
 
 #[cfg(windows)]
 pub fn for_each_thread(target_process_id: Pid, callback: impl Fn(HANDLE)) -> bool {
-    use sysinfo::PidExt;
     use winapi::um::winnt::THREAD_SUSPEND_RESUME;
 
     unsafe {
@@ -79,7 +76,7 @@ pub fn for_each_thread(target_process_id: Pid, callback: impl Fn(HANDLE)) -> boo
 
 #[cfg(not(windows))]
 pub fn for_each_thread() {
-    // todo
+    todo!()
 }
 
 #[cfg(windows)]
@@ -91,7 +88,7 @@ pub fn resume(target_process_id: Pid) -> bool {
 
 #[cfg(not(windows))]
 pub fn resume(target_process_id: Pid) -> bool {
-    // todo
+    todo!()
 }
 
 #[cfg(windows)]
@@ -103,7 +100,7 @@ pub fn suspend(target_process_id: Pid) -> bool {
 
 #[cfg(not(windows))]
 pub fn suspend(target_process_id: Pid) -> bool {
-    // todo
+    todo!()
 }
 
 pub fn spawn_thread_is_process_dead(
@@ -190,4 +187,5 @@ pub(crate) fn spawn_thread_check_if_process_is_hung(
     should_check: Arc<AtomicBool>,
     out_true_when_process_is_dead: Arc<AtomicBool>,
 ) {
+    todo!()
 }

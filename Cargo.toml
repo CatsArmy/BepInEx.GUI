@@ -1,6 +1,6 @@
 [package]
 name = "bepinex_gui"
-version = "3.0.2"
+version = "3.0.3"
 authors = ["Risk of Thunder"]
 license = "MIT"
 description = "Graphical User Interface meant to replace the regular console host that is used by BepInEx"
@@ -21,20 +21,20 @@ LegalCopyright = "Risk of Thunder"
 [dependencies]
 eframe = { git = "https://github.com/xiaoxiao921/egui/", features = ["persistence"] }
 #eframe = { path = "C:/Users/Quentin/source/repos/egui/crates/eframe", features = ["persistence"] }
-serde = { version = "1.0.163", features = ["derive"] }
-tracing = "0.1.37"
-tracing-subscriber = "0.3.17"
-byteorder = "1.4.3"
+serde = { version = "1.0.219", features = ["derive"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+byteorder = "1.5.0"
 clipboard = "0.5.0"
-directories-next = "2.0.0"
-serde_json = "1.0.96"
-reqwest = { version = "0.11.17", features = ["blocking", "gzip"] }
-winapi = {version = "0.3.9", features = ["tlhelp32"] }
-strum = { version = "0.24.1", features = ["derive"] }
+directories = "6.0.0"
+serde_json = "1.0.140"
+reqwest = { version = "0.12.15", features = ["blocking", "gzip"] }
+winapi = {version = "0.3.9", features = ["tlhelp32", "impl-default"] }
+strum = { version = "0.27.1", features = ["derive"] }
 zip = "0.6.6"
-sysinfo = "0.29.0"
-crossbeam-channel = "0.5.8"
-image = "0.24.6"
+sysinfo = "0.29.11"
+crossbeam-channel = "0.5.15"
+image = "0.25.6"
 
 # all of this is taken from https://github.com/johnthagen/min-sized-rust
 [profile.release]

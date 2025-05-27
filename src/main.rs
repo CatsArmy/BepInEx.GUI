@@ -28,7 +28,6 @@ fn main() {
         min_window_size: Some(Vec2::new(480., 270.)),
         initial_window_size: Some(Vec2::new(1034., 520.)),
         initial_centered: true,
-
         icon_data: Some(load_icon()),
 
         ..Default::default()

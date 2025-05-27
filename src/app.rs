@@ -56,6 +56,11 @@ impl App for BepInExGUI {
         eframe::set_value(storage, NAME, &self.config);
         _ = self.config.save_bepinex_toml_cfg_file();
     }
+    
+    fn on_close_event(&mut self) -> bool {
+        process::resume(self.app_launch_config.target_process_id());
+        true
+    }
 }
 
 impl BepInExGUI {

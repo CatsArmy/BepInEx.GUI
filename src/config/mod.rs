@@ -154,7 +154,7 @@ impl Config {
 }
 
 pub fn get_app_ron_file_full_path() -> Option<PathBuf> {
-    directories_next::ProjectDirs::from("", "", app::NAME).map(|proj_dirs| {
+    directories::ProjectDirs::from("", "", app::NAME).map(|proj_dirs| {
         let data_dir = proj_dirs.data_dir().to_path_buf();
         data_dir.join("app.ron")
     })
