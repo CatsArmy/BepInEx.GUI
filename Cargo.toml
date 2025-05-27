@@ -19,6 +19,9 @@ LegalCopyright = "Risk of Thunder"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# maybe a better alternative to tonic
+interprocess = "2.2.3"
+
 winapi-util = "0.1.9"
 winapi = {version = "0.3.9", features = ["tlhelp32"] }
 eframe = { version = "0.31.1", features = ["persistence"] }
