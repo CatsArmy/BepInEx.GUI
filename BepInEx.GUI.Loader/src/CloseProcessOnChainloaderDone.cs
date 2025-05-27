@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using BepInEx.Logging;
 
 namespace BepInEx.GUI.Loader;
@@ -38,8 +38,7 @@ public class CloseProcessOnChainloaderDone : ILogListener
         try
         {
             _process.Kill();
-        }
-        catch (Exception e)
+        } catch (Exception e)
         {
             Log.Error($"Error while trying to kill BepInEx GUI Process: {e}");
             Log.Error(e);

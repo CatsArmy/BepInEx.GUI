@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using BepInEx.Logging;
@@ -70,8 +70,7 @@ internal class SendLogToClientSocket : ILogListener
                 try
                 {
                     clientSocket.Send(logPacket.Bytes);
-                }
-                catch (Exception e)
+                } catch (Exception e)
                 {
                     Log.Error($"Error while trying to send log to socket: {e}{Environment.NewLine}Disconnecting socket.");
                     return;

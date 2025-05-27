@@ -1,12 +1,13 @@
-﻿global using System;
+global using System;
 global using System.Collections.Generic;
 global using System.Text;
+
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using BepInEx.Configuration;
 using System.Reflection;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using Mono.Cecil;
 
@@ -25,8 +26,7 @@ internal static class EntryPoint
         try
         {
             InitializeInternal();
-        }
-        catch (Exception e)
+        } catch (Exception e)
         {
             Log.Error($"Failed to initialize : ({e.GetType()}) {e.Message}{Environment.NewLine}{e}");
         }
@@ -57,11 +57,19 @@ internal static class EntryPoint
 
     private static string FindGUIExecutable()
     {
+        const string GuiFileName = "bepinex_gui";
+
+        var path = Directory.GetParent(typeof(EntryPoint).Assembly.Location);
+        var gui = $"{path}/{GuiFileName}.exe";
+        if (File.Exists(gui))
+        {
+            return gui;
+        }
+
         foreach (var filePath in Directory.GetFiles(Paths.PatcherPluginPath, "*", SearchOption.AllDirectories))
         {
             var fileName = Path.GetFileName(filePath);
 
-            const string GuiFileName = "bepinex_gui";
 
             // No platform check because proton is used for RoR2 and it handles it perfectly anyway:
             // It makes the Process.Start still goes through proton and makes the bep gui
@@ -135,7 +143,7 @@ internal static class EntryPoint
             $"\"{typeof(Paths).Assembly.GetName().Version}\" " +
             $"\"{Paths.ProcessName}\" " +
             $"\"{Paths.GameRootPath}\" " +
-            $"\"{GetLogOutputFilePath()}\" " +
+            $"\"{EntryPoint.GetLogOutputFilePath()}\" " +
             $"\"{Config.ConfigFilePath}\" " +
             $"\"{Process.GetCurrentProcess().Id}\" " +
             $"\"{socketPort}\"";
@@ -143,17 +151,22 @@ internal static class EntryPoint
         return Process.Start(processStartInfo);
     }
 
-    // Bad and hacky way to retrieve the correct log file path
     private static string GetLogOutputFilePath()
     {
-        foreach (var logListener in Logger.Listeners)
+        var parent = Directory.GetParent(Paths.PluginPath);
+        string path = $"{parent}/LogOutput.log";
+        if (!File.Exists(path))
         {
-            if (logListener is DiskLogListener diskLogListener)
+            foreach (var file in parent.EnumerateFiles())
             {
-                return diskLogListener.FileFullPath;
+                if (file.Extension.ToLower() == ".log")
+                {
+                    path = file.FullName;
+                    break;
+                }
             }
         }
 
-        return "";
+        return path;
     }
 }
